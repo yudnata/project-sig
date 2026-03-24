@@ -1,6 +1,4 @@
-<script setup lang="ts">
-// Common logic here
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <div class="base-button">
