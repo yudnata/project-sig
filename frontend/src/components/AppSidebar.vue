@@ -42,10 +42,10 @@ const isItemActive = (path: string) => {
 
 <template>
   <aside @mouseenter="store.isSidebarExpanded = true" @mouseleave="store.isSidebarExpanded = false"
-    class="group absolute top-4 left-4 bottom-4 w-16 hover:w-64 flex-col hidden md:flex shrink-0 transition-all duration-500 ease-in-out z-[1001] bg-transparent">
+    class="group absolute top-4 left-4 bottom-4 w-16 hover:w-64 flex-col hidden md:flex shrink-0 transition-[width] duration-500 ease-in-out z-[1001] bg-transparent will-change-[width]">
     <div class="absolute inset-y-0 -left-4 -right-8 z-[-1] cursor-pointer"></div>
     <div class="flex-1 flex flex-col bg-white/80 backdrop-blur-md overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-gray-100 rounded-2xl">
-      <div :class="['h-16 flex items-center shrink-0 border-b border-gray-50 whitespace-nowrap box-border transition-all duration-500', store.isSidebarExpanded ? 'px-6' : 'px-4']">
+      <div :class="['h-16 flex items-center shrink-0 border-b border-gray-100 whitespace-nowrap box-border transition-[padding] duration-500', store.isSidebarExpanded ? 'px-6' : 'px-4']">
         <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
             <path fill-rule="evenodd"
@@ -58,10 +58,10 @@ const isItemActive = (path: string) => {
           <p class="text-gray-400 text-[10px] font-medium mt-0.5">Sistem Pemetaan</p>
         </div>
       </div>
-      <nav :class="['flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden flex flex-col h-full transition-all duration-500', store.isSidebarExpanded ? 'px-6' : 'px-3']">
+      <nav :class="['flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden flex flex-col h-full transition-[padding] duration-500', store.isSidebarExpanded ? 'px-6' : 'px-3']">
         <div class="space-y-2">
           <RouterLink v-for="item in navItems" :key="item.path" :to="item.path" :class="[
-            'flex items-center gap-4 px-2.5 py-2.5 rounded-xl transition-all duration-200',
+            'flex items-center gap-4 px-2.5 py-2.5 rounded-xl transition-colors duration-200',
             isItemActive(item.path)
               ? 'bg-primary/10 text-primary font-bold shadow-sm shadow-primary/5'
               : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600',
@@ -73,8 +73,8 @@ const isItemActive = (path: string) => {
           </RouterLink>
         </div>
 
-        <div class="mt-auto pt-4 border-t border-gray-50 space-y-1">
-          <button @click="isProfileModalOpen = true" class="flex items-center gap-4 px-2.5 py-2.5 rounded-xl transition-all duration-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 w-full"
+        <div class="mt-auto pt-4 border-t border-gray-100 space-y-1">
+          <button @click="isProfileModalOpen = true" class="flex items-center gap-4 px-2.5 py-2.5 rounded-xl transition-colors duration-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 w-full"
             title="Pengaturan Profil">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0">
               <path stroke-linecap="round" stroke-linejoin="round"
@@ -84,7 +84,7 @@ const isItemActive = (path: string) => {
           </button>
 
           <button v-if="authStore.user" @click="handleLogout"
-            class="flex items-center gap-4 px-2.5 py-2.5 rounded-xl transition-all duration-200 text-gray-400 hover:bg-red-50 hover:text-red-500 w-full" title="Keluar Aplikasi">
+            class="flex items-center gap-4 px-2.5 py-2.5 rounded-xl transition-colors duration-200 text-gray-400 hover:bg-red-50 hover:text-red-500 w-full" title="Keluar Aplikasi">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
