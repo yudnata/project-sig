@@ -2,7 +2,7 @@
 import { useMapPointsStore } from '@/stores/mapPoints'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notifications'
-import MapComponent from '@/components/MapComponent.vue'
+import MapContainer from '@/components/Map/MapContainer.vue'
 import PointFormModal from '@/components/PointFormModal.vue'
 import ProfileCompletionModal from '@/components/ProfileCompletionModal.vue'
 
@@ -32,7 +32,7 @@ const handleMapClick = (data: { lat: number; lng: number; address?: string }) =>
 
     <ProfileCompletionModal />
 
-    <MapComponent @map-clicked="handleMapClick" class="flex-1" />
+    <MapContainer @map-clicked="handleMapClick" class="flex-1" />
 
     <PointFormModal />
   </div>

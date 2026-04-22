@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMapPointsStore } from '@/stores/mapPoints'
-import MapComponent from '@/components/MapComponent.vue'
+import MapContainer from '@/components/Map/MapContainer.vue'
 
 const store = useMapPointsStore()
 store.isEditMode = false
@@ -9,6 +9,6 @@ store.filterMyPoints = false
 
 <template>
   <div class="h-full w-full relative">
-    <MapComponent />
+    <MapContainer />
   </div>
 </template>
