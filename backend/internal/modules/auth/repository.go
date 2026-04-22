@@ -68,6 +68,11 @@ func (r *Repository) UpdateProfile(ctx context.Context, id, name, phone, institu
 	return err
 }
 
+func (r *Repository) UpdatePassword(ctx context.Context, id, passwordHash string) error {
+	_, err := r.db.Exec(ctx, `UPDATE users SET password=$1 WHERE id=$2`, passwordHash, id)
+	return err
+}
+
 func nullIfEmpty(s string) *string {
 	if s == "" {
 		return nil

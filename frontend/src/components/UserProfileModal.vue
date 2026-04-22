@@ -13,6 +13,73 @@ const emit = defineEmits<{
 
 const handleClose = () => {
   emit('close')
+  isChangingPassword.value = false
+  oldPassword.value = ''
+  newPassword.value = ''
+  confirmPassword.value = ''
+  errorMsg.value = ''
+}
+
+import { ref } from 'vue'
+import { useNotificationStore } from '@/stores/notifications'
+
+const notificationStore = useNotificationStore()
+
+const isChangingPassword = ref(false)
+const oldPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const isLoading = ref(false)
+const errorMsg = ref('')
+
+const isSsoUser = () => {
+  return authStore.user?.sso_provider != null && authStore.user?.sso_provider !== ''
+}
+
+const handleChangePassword = async () => {
+  errorMsg.value = ''
+  if (!isSsoUser() && !oldPassword.value) {
+    errorMsg.value = 'Password lama wajib diisi.'
+    return
+  }
+  if (!newPassword.value || newPassword.value.length < 6) {
+    errorMsg.value = 'Password baru minimal 6 karakter.'
+    return
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    errorMsg.value = 'Konfirmasi password tidak cocok.'
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/auth/password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authStore.token}`,
+      },
+      body: JSON.stringify({
+        old_password: oldPassword.value || undefined,
+        new_password: newPassword.value,
+      }),
+    })
+    const json = await res.json()
+    if (json.success) {
+      notificationStore.success('Password berhasil diperbarui!')
+      isChangingPassword.value = false
+      oldPassword.value = ''
+      newPassword.value = ''
+      confirmPassword.value = ''
+    } else {
+      errorMsg.value = json.message || 'Gagal memperbarui password.'
+    }
+  } catch (err) {
+    console.error(err)
+    errorMsg.value = 'Terjadi kesalahan jaringan.'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -77,6 +144,39 @@ const handleClose = () => {
           <div class="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-300">
             <span class="text-xs font-bold text-gray-400 uppercase">Status</span>
             <span class="text-sm font-bold text-gray-900">{{ authStore.user ? 'Aktif' : 'Terbatas' }}</span>
+          </div>
+          <div v-if="authStore.user" class="flex flex-col gap-2 p-4 bg-gray-50/50 rounded-2xl border border-gray-300">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-400 uppercase">Keamanan</span>
+              <button @click="isChangingPassword = !isChangingPassword" class="text-xs font-bold text-primary hover:underline">
+                {{ isChangingPassword ? 'Batal' : (isSsoUser() ? 'Set Password' : 'Ubah Password') }}
+              </button>
+            </div>
+
+            <div v-if="isChangingPassword" class="mt-2 space-y-3">
+              <div v-if="errorMsg" class="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100">
+                {{ errorMsg }}
+              </div>
+              <div v-if="!isSsoUser()">
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Password Lama</label>
+                <input v-model="oldPassword" type="password"
+                  class="w-full px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Password Baru</label>
+                <input v-model="newPassword" type="password"
+                  class="w-full px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Konfirmasi Password Baru</label>
+                <input v-model="confirmPassword" type="password"
+                  class="w-full px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+              </div>
+              <button @click="handleChangePassword" :disabled="isLoading"
+                class="w-full mt-2 py-2 bg-primary text-white rounded-lg font-bold text-xs hover:bg-primary-hover transition-colors disabled:opacity-50">
+                {{ isLoading ? 'Menyimpan...' : 'Simpan Password' }}
+              </button>
+            </div>
           </div>
         </div>
 

@@ -65,6 +65,32 @@ func (h *Handler) UpdateProfile(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.Success("Profil berhasil dilengkapi!", user))
 }
 
+func (h *Handler) GetMe(c fiber.Ctx) error {
+	userID := c.Locals("userID").(string)
+
+	user, err := h.service.GetMe(userID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(response.Error("User tidak ditemukan"))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("Data profil berhasil diambil", user))
+}
+
+func (h *Handler) UpdatePassword(c fiber.Ctx) error {
+	userID := c.Locals("userID").(string)
+
+	var req UpdatePasswordReq
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Validasi formulir gagal"))
+	}
+
+	if err := h.service.UpdatePassword(userID, req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error(err.Error()))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("Password berhasil diperbarui", nil))
+}
+
 func (h *Handler) GetConfig(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.Success("Config fetched", fiber.Map{
 		"default_avatar_url": h.service.cfg.DefaultAvatarURL,

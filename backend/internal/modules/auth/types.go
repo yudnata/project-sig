@@ -40,3 +40,8 @@ type SSOLoginReq struct {
 	SSOID       string `json:"sso_id"`
 	AvatarURL   string `json:"avatar_url"`
 }
+
+type UpdatePasswordReq struct {
+	OldPassword *string `json:"old_password"`
+	NewPassword string  `json:"new_password"`
+}

@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"backend/internal/config"
@@ -43,8 +44,18 @@ func (s *Service) Register(input RegisterReq) (*User, error) {
 
 func (s *Service) Login(input LoginReq) (string, *User, error) {
 	user, err := s.repo.FindByEmail(context.Background(), input.Email)
-	if err != nil || user.Password == "" || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)) != nil {
+	if err != nil {
 		return "", nil, errors.New("Email atau password salah")
+	}
+	if user.Password == "" {
+		provider := "Google"
+		if user.SSOProvider != nil && *user.SSOProvider != "" {
+			provider = *user.SSOProvider
+		}
+		return "", nil, fmt.Errorf("Akun ini terdaftar via %s. Silakan login menggunakan tombol '%s'", provider, provider)
+	}
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)) != nil {
+		return "", nil, errors.New("Password yang Anda masukkan salah")
 	}
 	token, err := s.generateToken(user.ID)
 	s.ensureAvatar(user)
@@ -91,6 +102,42 @@ func (s *Service) UpdateProfile(userID string, input UpdateProfileReq) (*User, e
 		s.ensureAvatar(user)
 	}
 	return user, err
+}
+
+func (s *Service) GetMe(userID string) (*User, error) {
+	user, err := s.repo.FindByID(context.Background(), userID)
+	if err != nil {
+		return nil, err
+	}
+	s.ensureAvatar(user)
+	return user, nil
+}
+
+func (s *Service) UpdatePassword(userID string, req UpdatePasswordReq) error {
+	user, err := s.repo.FindByID(context.Background(), userID)
+	if err != nil {
+		return errors.New("User tidak ditemukan")
+	}
+
+	if user.Password != "" {
+		if req.OldPassword == nil || *req.OldPassword == "" {
+			return errors.New("Password lama wajib diisi")
+		}
+		if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(*req.OldPassword)) != nil {
+			return errors.New("Password lama salah")
+		}
+	}
+
+	if len(req.NewPassword) < 6 {
+		return errors.New("Password baru minimal 6 karakter")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), 10)
+	if err != nil {
+		return errors.New("Gagal mengenkripsi password")
+	}
+
+	return s.repo.UpdatePassword(context.Background(), userID, string(hash))
 }
 
 func (s *Service) ensureAvatar(u *User) {
