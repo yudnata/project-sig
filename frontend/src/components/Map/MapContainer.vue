@@ -23,6 +23,37 @@ const { isEditMode, isSidebarExpanded, flyToCoords } = storeToRefs(uiStore)
 const mapContainer = ref<HTMLElement | null>(null)
 let map: L.Map | null = null
 let markerLayer: L.LayerGroup | null = null
+let draftMarker: L.Marker | null = null
+
+const createDraftMarker = (lat: number, lng: number) => {
+  if (!map) return
+  if (draftMarker) {
+    draftMarker.setLatLng([lat, lng])
+  } else {
+    const draftIcon = L.divIcon({
+      className: 'draft-div-icon',
+      html: `
+        <div class="relative animate-bounce">
+          <div class="w-8 h-8 rounded-xl bg-gray-400/80 backdrop-blur-sm flex items-center justify-center text-white border-2 border-dashed border-white shadow-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="w-4 h-4">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </div>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    })
+    draftMarker = L.marker([lat, lng], { icon: draftIcon, zIndexOffset: 1000 }).addTo(map)
+  }
+}
+
+const removeDraftMarker = () => {
+  if (draftMarker && map) {
+    map.removeLayer(draftMarker)
+    draftMarker = null
+  }
+}
 
 const reverseGeocode = async (lat: number, lng: number) => {
   try {
@@ -52,7 +83,7 @@ onMounted(async () => {
 
   map.on('click', async (e: L.LeafletMouseEvent) => {
     if (!uiStore.isEditMode) return
-    
+
     emit('map-clicked', { lat: e.latlng.lat, lng: e.latlng.lng })
 
     if (map) {
@@ -86,6 +117,15 @@ onUnmounted(() => {
   if (map) {
     map.remove()
     map = null
+  }
+  removeDraftMarker()
+})
+
+watch(() => store.activePoint, (newPoint) => {
+  if (newPoint && (!newPoint.id || newPoint.id === 0)) {
+    createDraftMarker(newPoint.latitude, newPoint.longitude)
+  } else {
+    removeDraftMarker()
   }
 })
 
