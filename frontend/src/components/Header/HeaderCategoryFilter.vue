@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useMapPointsStore } from '@/stores/mapPoints'
+import { useMapUIStore } from '@/stores/mapUI'
 
 const store = useMapPointsStore()
+const uiStore = useMapUIStore()
 </script>
 
 <template>
   <div class="relative shrink-0">
-    <select v-model="store.filterTypeId"
+    <select v-model="uiStore.filterTypeId"
       class="h-9 bg-white border border-gray-300 pl-3 pr-7 rounded-xl text-[11px] font-bold text-gray-700 appearance-none focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all cursor-pointer uppercase tracking-tight">
       <option :value="null">SEMUA KATEGORI</option>
       <option v-for="type in store.objectTypes" :key="type.id" :value="type.id">

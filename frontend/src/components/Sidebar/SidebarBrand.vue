@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useMapPointsStore } from '@/stores/mapPoints'
+import { useMapUIStore } from '@/stores/mapUI'
 
-const store = useMapPointsStore()
+const uiStore = useMapUIStore()
 </script>
 
 <template>
-  <div :class="['h-16 flex items-center shrink-0 border-b border-gray-200 whitespace-nowrap box-border transition-[padding] duration-500', store.isSidebarExpanded ? 'px-6' : 'px-4']">
+  <div :class="['h-16 flex items-center shrink-0 border-b border-gray-200 whitespace-nowrap box-border transition-[padding] duration-500', uiStore.isSidebarExpanded ? 'px-6' : 'px-4']">
     <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
         <path fill-rule="evenodd"

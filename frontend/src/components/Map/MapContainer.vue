@@ -4,6 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapPointsStore } from '@/stores/mapPoints'
 import { useAuthStore } from '@/stores/auth'
+import { useMapUIStore } from '@/stores/mapUI'
 import { storeToRefs } from 'pinia'
 import MapLegend from './MapLegend.vue'
 import MapPopupContent from './MapPopupContent.vue'
@@ -14,7 +15,10 @@ const emit = defineEmits<{
 
 const store = useMapPointsStore()
 const authStore = useAuthStore()
-const { filteredPoints, objectTypes, isEditMode, isSidebarExpanded } = storeToRefs(store)
+const uiStore = useMapUIStore()
+
+const { filteredPoints, objectTypes } = storeToRefs(store)
+const { isEditMode, isSidebarExpanded, flyToCoords } = storeToRefs(uiStore)
 
 const mapContainer = ref<HTMLElement | null>(null)
 let map: L.Map | null = null
@@ -47,8 +51,8 @@ onMounted(async () => {
   markerLayer = L.layerGroup().addTo(map)
 
   map.on('click', async (e: L.LeafletMouseEvent) => {
-    if (!store.isEditMode) return
-
+    if (!uiStore.isEditMode) return
+    
     emit('map-clicked', { lat: e.latlng.lat, lng: e.latlng.lng })
 
     if (map) {
@@ -120,7 +124,6 @@ const renderMarkers = () => {
 
     const marker = L.marker([point.latitude, point.longitude], { icon: customIcon }).addTo(markerLayer!)
 
-    // Create a container for the Vue component
     const container = document.createElement('div')
     const vnode = h(MapPopupContent, { point, typeName })
     render(vnode, container)
@@ -149,7 +152,7 @@ watch(isSidebarExpanded, () => {
   })
 })
 
-watch(() => store.flyToCoords, (newCoords) => {
+watch(flyToCoords, (newCoords) => {
   if (newCoords && map) {
     map.flyTo([newCoords.lat, newCoords.lng], 16)
 

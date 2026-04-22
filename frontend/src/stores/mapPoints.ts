@@ -1,8 +1,27 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useNotificationStore } from '@/stores/notifications'
+import { useAuthStore } from './auth'
+import { useNotificationStore } from './notifications'
+import { useMapUIStore } from './mapUI'
 
-import { useAuthStore } from '@/stores/auth'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+
+export interface GeoPoint {
+  id?: number
+  name: string
+  latitude: number
+  longitude: number
+  type_id: number
+  address?: string
+  tahun_berdiri?: number
+  status_kepemilikan?: string
+  description?: string
+  owner_id?: string
+  owner_name?: string
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
 
 export interface ObjectType {
   id: number
@@ -10,114 +29,73 @@ export interface ObjectType {
   icon: string
 }
 
-export interface GeoPoint {
-  id: number
-  type_id: number
-  name: string
-  latitude: number
-  longitude: number
-  address: string
-  owner_id: string
-  owner_name?: string
-  tahun_berdiri?: number
-  status_kepemilikan?: string
-  description?: string
-  is_active: boolean
-}
-
 export const useMapPointsStore = defineStore('mapPoints', () => {
+  const points = ref<GeoPoint[]>([])
   const objectTypes = ref<ObjectType[]>([
-    { id: 1, name: 'Rumah', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
-    { id: 2, name: 'Kantor', icon: 'M3 21h18M9 8h6M9 12h6M9 16h6M5 21V3h14v18' },
-    { id: 3, name: 'Rumah Sakit', icon: 'M12 7v10M7 12h10' },
-    { id: 4, name: 'Sekolah', icon: 'M22 10L12 5 2 10l10 5 10-5zM6 12v5c3.5 3 8.5 3 12 0v-5' },
-    { id: 5, name: 'Tempat Ibadah', icon: 'M12 2L2 7v10l10 5 10-5V7L12 2zm0 18v-8' },
+    {
+      id: 1,
+      name: 'Rumah',
+      icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    },
+    {
+      id: 2,
+      name: 'Kantor',
+      icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+    },
+    {
+      id: 3,
+      name: 'Rumah Sakit',
+      icon: 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z',
+    },
+    {
+      id: 4,
+      name: 'Sekolah',
+      icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+    },
+    { id: 5, name: 'Tempat Ibadah', icon: 'M21 12a9 9 0 11-18 0 9 9 0 0118 0z M12 8v8 M8 12h8' },
     {
       id: 6,
       name: 'Objek Wisata',
-      icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8l1.5 3.5L17 13l-3.5 1.5L12 18l-1.5-3.5L7 13l3.5-1.5L12 8z',
+      icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z',
     },
-    { id: 7, name: 'Kuliner', icon: 'M3 11l1-9h16l1 9c0 3-3 5-3 5s-1 6-1 7H7s-1-7-1-7-3-2-3-5z' },
     {
-      id: 8,
-      name: 'Mall',
-      icon: 'M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0',
+      id: 7,
+      name: 'Kuliner',
+      icon: 'M10.5 3.5a2.121 2.121 0 00-3 0 3.84 3.84 0 00-1.05 3.8c.215.845.663 1.59 1.25 2.15a13.56 13.56 0 014.25 5.5c.34 1.15.66 2.3.95 3.45.1.35.45.6.85.6h.4c.4 0 .75-.25.85-.6.29-1.15.61-2.3.95-3.45a13.56 13.56 0 014.25-5.5 3.84 3.84 0 00.2-5.95 2.121 2.121 0 00-3 0l-2.5 2.5-2.5-2.5z',
     },
-    { id: 9, name: 'Kantor Polisi', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
-    {
-      id: 10,
-      name: 'Pemadam Kebakaran',
-      icon: 'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.295 1-3a2.5 2.5 0 0 0 2.5 2.5z',
-    },
-    { id: 11, name: 'Taman', icon: 'M12 19V5M5 11l7-7 7 7M5 19h14' },
+    { id: 8, name: 'Mall', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
   ])
 
-  const points = ref<GeoPoint[]>([])
-
-  const isEditMode = ref(false)
   const isModalOpen = ref(false)
   const activePoint = ref<GeoPoint | null>(null)
-  const isSidebarExpanded = ref(false)
 
-  // Global confirmation modal state
-  const confirmState = ref({
+  const confirmData = ref({
     isOpen: false,
-    title: 'Konfirmasi',
-    message: 'Apakah Anda yakin?',
+    title: '',
+    message: '',
     onConfirm: () => {},
   })
 
-  const requestConfirm = (title: string, message: string, onConfirm: () => void) => {
-    confirmState.value = {
-      isOpen: true,
-      title,
-      message,
-      onConfirm: () => {
-        onConfirm()
-        confirmState.value.isOpen = false
-      },
-    }
-  }
-
-  const cancelConfirm = () => {
-    confirmState.value.isOpen = false
-  }
-
-  const searchQuery = ref('')
-  const filterTypeId = ref<number | null>(null)
-  const filterMyPoints = ref<boolean>(true)
-  const currentUserId = ref<string>('')
-  const flyToCoords = ref<{ lat: number; lng: number } | null>(null)
-
-  const flyTo = (lat: number, lng: number) => {
-    flyToCoords.value = { lat, lng }
-    setTimeout(() => {
-      flyToCoords.value = null
-    }, 1000)
-  }
-
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
   const notificationStore = useNotificationStore()
 
   const fetchPoints = async () => {
     try {
       const res = await fetch(`${API_URL}/points`)
       const json = await res.json()
-      if (json.success) {
-        points.value = json.data
-      }
-    } catch (err) {
-      console.error('Failed to fetch points:', err)
+      if (json.success) points.value = json.data
+    } catch {
+      notificationStore.error('Gagal mengambil data bangunan')
     }
   }
 
-  const savePoint = async (pointData: Partial<GeoPoint>) => {
-    try {
-      const token = localStorage.getItem('auth_token') || ''
-      const isEdit = !!pointData.id
-      const method = isEdit ? 'PUT' : 'POST'
-      const url = isEdit ? `${API_URL}/points/${pointData.id}` : `${API_URL}/points`
+  const savePoint = async (pointData: GeoPoint) => {
+    const authStore = useAuthStore()
+    const token = authStore.token
+    const isEdit = !!pointData.id
+    const method = isEdit ? 'PUT' : 'POST'
+    const url = isEdit ? `${API_URL}/points/${pointData.id}` : `${API_URL}/points`
 
+    try {
       const res = await fetch(url, {
         method,
         headers: {
@@ -129,11 +107,7 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
       const json = await res.json()
       if (json.success) {
         const savedPoint = json.data
-
-        const authStore = useAuthStore()
-        if (!savedPoint.owner_name && authStore.user) {
-          savedPoint.owner_name = authStore.user.name
-        }
+        if (!savedPoint.owner_name && authStore.user) savedPoint.owner_name = authStore.user.name
 
         if (isEdit) {
           const index = points.value.findIndex((p) => p.id === pointData.id)
@@ -141,96 +115,78 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
         } else {
           points.value.push(savedPoint)
         }
-        notificationStore.success(
-          isEdit ? 'Titik berhasil diperbarui!' : 'Titik berhasil disimpan!',
-        )
-        return true
+        notificationStore.success(isEdit ? 'Data berhasil diperbarui' : 'Data berhasil ditambahkan')
+        closeModal()
+      } else {
+        notificationStore.error(json.message || 'Gagal menyimpan data')
       }
-      notificationStore.error(json.message || 'Gagal menyimpan titik.')
-      return false
-    } catch (err) {
-      console.error('Failed to save point:', err)
-      notificationStore.error('Terjadi kesalahan koneksi.')
-      return false
+    } catch {
+      notificationStore.error('Terjadi kesalahan jaringan')
     }
   }
 
   const deletePoint = async (id: number) => {
+    const authStore = useAuthStore()
+    const token = authStore.token
+
     try {
-      const token = localStorage.getItem('auth_token') || ''
       const res = await fetch(`${API_URL}/points/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
       const json = await res.json()
       if (json.success) {
         points.value = points.value.filter((p) => p.id !== id)
-        notificationStore.success('Titik berhasil dihapus!')
-        return true
+        notificationStore.success('Data berhasil dihapus')
+      } else {
+        notificationStore.error(json.message || 'Gagal menghapus data')
       }
-      notificationStore.error(json.message || 'Gagal menghapus titik.')
-      return false
-    } catch (err) {
-      console.error('Failed to delete point:', err)
-      notificationStore.error('Terjadi kesalahan koneksi.')
-      return false
+    } catch {
+      notificationStore.error('Terjadi kesalahan jaringan')
     }
   }
 
-  const filteredPoints = computed(() => {
-    const authStore = useAuthStore()
-    return points.value.filter((p) => {
-      if (!p.is_active) return false
-
-      if (filterMyPoints.value && authStore.user && p.owner_id !== authStore.user.id) {
-        return false
-      }
-
-      if (filterTypeId.value && p.type_id !== filterTypeId.value) return false
-
-      if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
-        if (!p.name.toLowerCase().includes(query) && !p.address.toLowerCase().includes(query))
-          return false
-      }
-      return true
-    })
-  })
-
-  const toggleEditMode = () => (isEditMode.value = !isEditMode.value)
   const openModal = (point?: GeoPoint) => {
-    activePoint.value = point || null
+    activePoint.value = point ? { ...point } : null
     isModalOpen.value = true
   }
+
   const closeModal = () => {
     isModalOpen.value = false
     activePoint.value = null
   }
 
+  const requestConfirm = (title: string, message: string, onConfirm: () => void) => {
+    confirmData.value = { isOpen: true, title, message, onConfirm }
+  }
+
+  const filteredPoints = computed(() => {
+    const uiStore = useMapUIStore()
+    const authStore = useAuthStore()
+
+    return points.value.filter((point) => {
+      const matchSearch =
+        point.name.toLowerCase().includes(uiStore.searchQuery.toLowerCase()) ||
+        (point.address && point.address.toLowerCase().includes(uiStore.searchQuery.toLowerCase()))
+      const matchType = !uiStore.filterTypeId || point.type_id === uiStore.filterTypeId
+      const matchOwner = !uiStore.filterMyPoints || point.owner_id === authStore.user?.id
+
+      return matchSearch && matchType && matchOwner
+    })
+  })
+
   return {
-    objectTypes,
     points,
-    isEditMode,
+    objectTypes,
     isModalOpen,
     activePoint,
-    isSidebarExpanded,
-    searchQuery,
-    filterTypeId,
-    filterMyPoints,
+    confirmData,
     filteredPoints,
-    currentUserId,
-    flyToCoords,
     fetchPoints,
     savePoint,
-    flyTo,
-    toggleEditMode,
+    deletePoint,
     openModal,
     closeModal,
-    deletePoint,
-    confirmState,
     requestConfirm,
-    cancelConfirm,
   }
 })

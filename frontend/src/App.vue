@@ -5,6 +5,8 @@ import AppSidebar from '@/components/Sidebar/AppSidebar.vue'
 import AppHeader from '@/components/Header/AppHeader.vue'
 import NotificationToast from '@/components/UI/NotificationToast.vue'
 import ConfirmModal from '@/components/Modals/ConfirmModal.vue'
+import PointFormModal from '@/components/Modals/PointFormModal.vue'
+import ProfileCompletionModal from '@/components/Modals/ProfileCompletionModal.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
@@ -48,4 +50,6 @@ const isLoginRoute = computed(() => route.path === '/login')
 
   <NotificationToast />
   <ConfirmModal />
+  <PointFormModal />
+  <ProfileCompletionModal />
 </template>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useMapPointsStore } from '@/stores/mapPoints'
+import { useMapUIStore } from '@/stores/mapUI'
 
 const store = useMapPointsStore()
+const uiStore = useMapUIStore()
 
 onMounted(async () => {
   await store.fetchPoints()
@@ -17,7 +19,7 @@ const getTypeName = (typeId: number) => {
 <template>
   <div :class="[
     'h-full w-full flex flex-col transition-[padding] duration-500 ease-in-out overflow-hidden',
-    store.isSidebarExpanded ? 'pl-[288px]' : 'pl-24',
+    uiStore.isSidebarExpanded ? 'pl-[288px]' : 'pl-24',
     'pt-24 pb-6 pr-6'
   ]">
     <div class="flex-1 flex flex-col bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden">
@@ -29,11 +31,11 @@ const getTypeName = (typeId: number) => {
         <div class="flex items-center gap-4">
           <!-- Toggle Filter My Points -->
           <div class="flex bg-gray-100 p-1 rounded-xl shadow-inner shrink-0">
-            <button @click="store.filterMyPoints = false" :class="[!store.filterMyPoints ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700']"
+            <button @click="uiStore.filterMyPoints = false" :class="[!uiStore.filterMyPoints ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700']"
               class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2">
               Semua Data
             </button>
-            <button @click="store.filterMyPoints = true" :class="[store.filterMyPoints ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700']"
+            <button @click="uiStore.filterMyPoints = true" :class="[uiStore.filterMyPoints ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700']"
               class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2">
               Kontribusi Saya
             </button>
@@ -45,7 +47,7 @@ const getTypeName = (typeId: number) => {
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
             </span>
-            <input v-model="store.searchQuery" type="text" placeholder="Cari bangunan atau alamat..."
+            <input v-model="uiStore.searchQuery" type="text" placeholder="Cari bangunan atau alamat..."
               class="pl-9 pr-4 py-2 w-64 bg-white border border-gray-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-xs font-bold shadow-sm" />
           </div>
         </div>

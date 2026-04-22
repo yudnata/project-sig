@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
 import { useMapPointsStore, type GeoPoint } from '@/stores/mapPoints'
+import { useMapUIStore } from '@/stores/mapUI'
 
 const props = defineProps<{
   point: GeoPoint
@@ -9,6 +10,7 @@ const props = defineProps<{
 
 const authStore = useAuthStore()
 const store = useMapPointsStore()
+const uiStore = useMapUIStore()
 
 const handleEdit = () => {
   store.openModal(props.point)
@@ -59,7 +61,7 @@ const handleDelete = () => {
         Kontributor: {{ point.owner_name || 'Sistem' }}
       </div>
 
-      <div v-if="authStore.isAuthenticated() && store.isEditMode && point.owner_id === authStore.user?.id" class="mt-3 flex gap-2 pt-2 border-t border-gray-100">
+      <div v-if="authStore.isAuthenticated() && uiStore.isEditMode && point.owner_id === authStore.user?.id" class="mt-3 flex gap-2 pt-2 border-t border-gray-100">
         <button @click="handleEdit" class="flex-1 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-1.5 rounded text-[10px] uppercase tracking-wide transition-colors">
           Edit
         </button>

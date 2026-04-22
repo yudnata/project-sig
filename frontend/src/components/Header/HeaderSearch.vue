@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useMapPointsStore, type GeoPoint } from '@/stores/mapPoints'
+import { useMapUIStore } from '@/stores/mapUI'
 
 const store = useMapPointsStore()
+const uiStore = useMapUIStore()
 
 const handleSelectPoint = (point: GeoPoint) => {
-  store.flyTo(point.latitude, point.longitude)
-  store.searchQuery = ''
+  uiStore.flyTo(point.latitude, point.longitude)
+  uiStore.searchQuery = ''
 }
 </script>
 
@@ -16,10 +18,10 @@ const handleSelectPoint = (point: GeoPoint) => {
         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
       </svg>
     </div>
-    <input v-model="store.searchQuery" type="text" placeholder="Cari lokasi bangunan..."
+    <input v-model="uiStore.searchQuery" type="text" placeholder="Cari lokasi bangunan..."
       class="w-full h-9 pl-9 pr-4 bg-white border border-gray-300 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-xs font-semibold text-gray-800 placeholder:text-gray-400 outline-none" />
 
-    <div v-if="store.searchQuery && store.filteredPoints.length > 0"
+    <div v-if="uiStore.searchQuery && store.filteredPoints.length > 0"
       class="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl overflow-hidden z-[2000]">
       <div class="max-h-64 overflow-y-auto">
         <div v-for="point in store.filteredPoints.slice(0, 5)" :key="point.id" @click="handleSelectPoint(point)"

@@ -2,11 +2,11 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useMapPointsStore } from '@/stores/mapPoints'
+import { useMapUIStore } from '@/stores/mapUI'
 
 const route = useRoute()
 const authStore = useAuthStore()
-const store = useMapPointsStore()
+const uiStore = useMapUIStore()
 
 const navItems = computed(() => {
   const all = [
@@ -38,7 +38,7 @@ const isItemActive = (path: string) => {
 </script>
 
 <template>
-  <nav :class="['flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden flex flex-col transition-[padding] duration-500', store.isSidebarExpanded ? 'px-6' : 'px-3']">
+  <nav :class="['flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden flex flex-col transition-[padding] duration-500', uiStore.isSidebarExpanded ? 'px-6' : 'px-3']">
     <div class="space-y-2">
       <RouterLink v-for="item in navItems" :key="item.path" :to="item.path" :class="[
         'flex items-center gap-4 px-2.5 py-2.5 rounded-xl transition-colors duration-200',
