@@ -3,6 +3,7 @@ import { RouterView, RouterLink, useRoute } from 'vue-router'
 import { computed } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
+import NotificationToast from '@/components/NotificationToast.vue'
 
 const route = useRoute()
 const isLoginRoute = computed(() => route.path === '/login')
@@ -13,7 +14,6 @@ const isLoginRoute = computed(() => route.path === '/login')
   <template v-if="isLoginRoute">
     <RouterView />
   </template>
-
 
   <div v-else class="flex h-screen bg-surface font-sans text-text antialiased overflow-hidden">
 
@@ -42,4 +42,6 @@ const isLoginRoute = computed(() => route.path === '/login')
       </main>
     </div>
   </div>
+
+  <NotificationToast />
 </template>

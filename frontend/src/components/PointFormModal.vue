@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useMapPointsStore, type GeoPoint } from '@/stores/mapPoints'
+import { useNotificationStore } from '@/stores/notifications'
 
 const store = useMapPointsStore()
+const notificationStore = useNotificationStore()
 
 const getDefaultForm = (): Partial<GeoPoint> => ({
   type_id: store.objectTypes.length > 0 ? store.objectTypes[0]?.id || 1 : 1,
@@ -27,7 +29,7 @@ watch(() => store.activePoint, (newPoint) => {
 
 const submitForm = async () => {
   if (!formData.value.name || !formData.value.latitude || !formData.value.longitude) {
-    alert('Nama dan Koordinat wajib diisi!')
+    notificationStore.warning('Nama dan Koordinat wajib diisi!')
     return
   }
 

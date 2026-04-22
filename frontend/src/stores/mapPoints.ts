@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useNotificationStore } from '@/stores/notifications'
 
 export interface ObjectType {
   id: number
@@ -61,6 +62,7 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
   const currentUserId = ref<string>('')
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+  const notificationStore = useNotificationStore()
 
   const fetchPoints = async () => {
     try {
@@ -88,12 +90,14 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
       const json = await res.json()
       if (json.success) {
         points.value.push(json.data)
+        notificationStore.success('Titik berhasil disimpan!')
         return true
       }
-      alert(json.message)
+      notificationStore.error(json.message || 'Gagal menyimpan titik.')
       return false
     } catch (err) {
       console.error('Failed to save point:', err)
+      notificationStore.error('Terjadi kesalahan koneksi.')
       return false
     }
   }

@@ -2,9 +2,11 @@
 import { useRouter } from 'vue-router'
 import { decodeCredential } from 'vue3-google-login'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notifications'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
@@ -38,13 +40,14 @@ const handleSSOSuccess = async (response: GoogleCredentialResponse) => {
     const result = await res.json()
     if (result.success) {
       authStore.login(result.data.token, result.data.user)
+      notificationStore.success('Selamat datang kembali!')
       router.push('/dashboard')
     } else {
-      alert(result.message || 'Login SSO gagal di sisi server.')
+      notificationStore.error(result.message || 'Login SSO gagal di sisi server.')
     }
   } catch (err) {
     console.error('SSO Error:', err)
-    alert('Terjadi kesalahan saat memproses login Google.')
+    notificationStore.error('Terjadi kesalahan saat memproses login Google.')
   }
 }
 </script>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notifications'
 
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 
 const phone = ref('')
 const institution = ref('')
@@ -12,7 +14,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
 const submitProfile = async () => {
   if (!phone.value || !institution.value) {
-    alert("Harap lengkapi semua data.")
+    notificationStore.warning("Harap lengkapi semua data.")
     return
   }
 
@@ -34,13 +36,13 @@ const submitProfile = async () => {
     const result = await response.json()
     if (result.success && result.data) {
       authStore.user = result.data
-      alert("Terima kasih! Profil Anda berhasil dilengkapi.")
+      notificationStore.success("Terima kasih! Profil Anda berhasil dilengkapi.")
     } else {
-      alert(result.message || 'Gagal menyimpan profil.')
+      notificationStore.error(result.message || 'Gagal menyimpan profil.')
     }
   } catch (err) {
     console.error("Profile submit error:", err)
-    alert('Terjadi kesalahan koneksi.')
+    notificationStore.error('Terjadi kesalahan koneksi.')
   } finally {
     isLoading.value = false
   }
