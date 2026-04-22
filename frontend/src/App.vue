@@ -4,8 +4,10 @@ import { computed } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import NotificationToast from '@/components/NotificationToast.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const isLoginRoute = computed(() => route.path === '/login')
 </script>
 
@@ -28,8 +30,8 @@ const isLoginRoute = computed(() => route.path === '/login')
         </div>
         <nav class="flex overflow-auto text-sm space-x-2 pb-1">
           <RouterLink to="/" class="px-3 py-1.5 rounded text-white/80" active-class="bg-white/20 !text-white font-bold">Public</RouterLink>
-          <RouterLink to="/dashboard" class="px-3 py-1.5 rounded shrink-0 text-white/80" active-class="bg-white/20 !text-white font-bold">Dashboard</RouterLink>
-          <RouterLink to="/tabular" class="px-3 py-1.5 rounded shrink-0 text-white/80" active-class="bg-white/20 !text-white font-bold">Tabel Master</RouterLink>
+          <RouterLink v-if="authStore.user" to="/dashboard" class="px-3 py-1.5 rounded shrink-0 text-white/80" active-class="bg-white/20 !text-white font-bold">Dashboard</RouterLink>
+          <RouterLink v-if="authStore.user" to="/tabular" class="px-3 py-1.5 rounded shrink-0 text-white/80" active-class="bg-white/20 !text-white font-bold">Tabel Master</RouterLink>
         </nav>
       </header>
 

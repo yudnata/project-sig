@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { decodeCredential } from 'vue3-google-login'
+import { googleTokenLogin } from 'vue3-google-login'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notifications'
 
@@ -10,30 +10,27 @@ const notificationStore = useNotificationStore()
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
-interface GoogleCredentialResponse {
-  credential: string;
-}
-
-interface GoogleUserData {
-  email: string;
-  name: string;
-  sub: string;
-  picture: string;
-}
-
-const handleSSOSuccess = async (response: GoogleCredentialResponse) => {
+const loginWithGoogle = async () => {
   try {
-    const userData = decodeCredential(response.credential) as GoogleUserData
+    // Opens a popup — no One Tap, no origin propagation delay
+    const tokenResponse = await googleTokenLogin()
 
+    // Get user info using the access token
+    const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+    })
+    const userInfo = await userInfoRes.json()
+
+    // Send to backend
     const res = await fetch(`${API_URL}/auth/sso`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: userData.email,
-        name: userData.name,
+        email: userInfo.email,
+        name: userInfo.name,
         sso_provider: 'google',
-        sso_id: userData.sub,
-        avatar_url: userData.picture
+        sso_id: userInfo.sub,
+        avatar_url: userInfo.picture,
       })
     })
 
@@ -47,7 +44,7 @@ const handleSSOSuccess = async (response: GoogleCredentialResponse) => {
     }
   } catch (err) {
     console.error('SSO Error:', err)
-    notificationStore.error('Terjadi kesalahan saat memproses login Google.')
+    notificationStore.error('Terjadi kesalahan saat login Google.')
   }
 }
 </script>
@@ -80,10 +77,19 @@ const handleSSOSuccess = async (response: GoogleCredentialResponse) => {
           <div class="flex-grow border-t border-gray-200"></div>
         </div>
 
-        <div class="flex justify-center w-full">
-
-          <GoogleLogin :callback="handleSSOSuccess" />
-        </div>
+        <!-- Custom Google Button -->
+        <button @click="loginWithGoogle"
+          class="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:scale-[0.98] transition-all shadow-sm">
+          <!-- Google G Logo SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5 shrink-0">
+            <path fill="#FFC107"
+              d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z" />
+            <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+            <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.6l6.2 5.2C36.9 37.3 44 32 44 24c0-1.3-.1-2.7-.4-3.9z" />
+          </svg>
+          <span class="text-sm font-semibold text-gray-700">Masuk dengan Google</span>
+        </button>
       </div>
     </div>
   </div>

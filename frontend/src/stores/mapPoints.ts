@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useNotificationStore } from '@/stores/notifications'
 
+import { useAuthStore } from '@/stores/auth'
+
 export interface ObjectType {
   id: number
   name: string
@@ -58,8 +60,16 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
 
   const searchQuery = ref('')
   const filterTypeId = ref<number | null>(null)
-  const filterMyPoints = ref<boolean>(false)
+  const filterMyPoints = ref<boolean>(true)
   const currentUserId = ref<string>('')
+  const flyToCoords = ref<{ lat: number; lng: number } | null>(null)
+
+  const flyTo = (lat: number, lng: number) => {
+    flyToCoords.value = { lat, lng }
+    setTimeout(() => {
+      flyToCoords.value = null
+    }, 1000)
+  }
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
   const notificationStore = useNotificationStore()
@@ -103,9 +113,16 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
   }
 
   const filteredPoints = computed(() => {
+    const authStore = useAuthStore()
     return points.value.filter((p) => {
       if (!p.is_active) return false
+
+      if (filterMyPoints.value && authStore.user && p.owner_id !== authStore.user.id) {
+        return false
+      }
+
       if (filterTypeId.value && p.type_id !== filterTypeId.value) return false
+
       if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
         if (!p.name.toLowerCase().includes(query) && !p.address.toLowerCase().includes(query))
@@ -137,8 +154,10 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
     filterMyPoints,
     filteredPoints,
     currentUserId,
+    flyToCoords,
     fetchPoints,
     savePoint,
+    flyTo,
     toggleEditMode,
     openModal,
     closeModal,

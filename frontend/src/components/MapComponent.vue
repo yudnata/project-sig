@@ -5,10 +5,6 @@ import 'leaflet/dist/leaflet.css'
 import { useMapPointsStore } from '@/stores/mapPoints'
 import { storeToRefs } from 'pinia'
 
-const props = defineProps<{
-  flyTo?: { lat: number; lng: number } | null
-}>()
-
 const emit = defineEmits<{
   (e: 'map-clicked', data: { lat: number; lng: number; address?: string }): void
 }>()
@@ -45,7 +41,11 @@ onMounted(() => {
   markerLayer = L.layerGroup().addTo(map)
 
   map.on('click', async (e: L.LeafletMouseEvent) => {
-    if (!isEditMode.value) return
+    console.log('[MapComponent] Map clicked!', e.latlng, 'isEditMode:', store.isEditMode)
+    if (!store.isEditMode) return
+    console.log('[MapComponent] Edit mode active, emitting map-clicked...')
+
+    emit('map-clicked', { lat: e.latlng.lat, lng: e.latlng.lng })
 
     if (map) {
       L.popup()
@@ -56,14 +56,16 @@ onMounted(() => {
 
     const address = await reverseGeocode(e.latlng.lat, e.latlng.lng)
 
+    if (store.activePoint && store.activePoint.latitude === e.latlng.lat && store.activePoint.longitude === e.latlng.lng) {
+      store.activePoint = { ...store.activePoint, address }
+    }
+
     if (map) {
       L.popup()
         .setLatLng(e.latlng)
-        .setContent(`<div class="font-bold text-sm text-primary max-w-[200px] leading-tight"><p class="m-0 mb-1">📍 ${address}</p><p class="text-[10px] text-gray-500 m-0">Klik form di luar ini untuk menyimpan titik</p></div>`)
+        .setContent(`<div class="font-bold text-sm text-primary max-w-[200px] leading-tight"><p class="m-0 mb-1">📍 ${address}</p></div>`)
         .openOn(map)
     }
-
-    emit('map-clicked', { lat: e.latlng.lat, lng: e.latlng.lng, address })
   })
 
   const legend = new L.Control({ position: 'bottomright' })
@@ -215,9 +217,18 @@ watch(isSidebarExpanded, () => {
   })
 })
 
-watch(() => props.flyTo, (newCoords) => {
+watch(() => store.flyToCoords, (newCoords) => {
   if (newCoords && map) {
     map.flyTo([newCoords.lat, newCoords.lng], 16)
+
+    markerLayer?.eachLayer((layer: L.Layer) => {
+      if (layer instanceof L.Marker) {
+        const latLng = layer.getLatLng()
+        if (latLng.lat === newCoords.lat && latLng.lng === newCoords.lng) {
+          layer.openPopup()
+        }
+      }
+    })
   }
 })
 </script>
