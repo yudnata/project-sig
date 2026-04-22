@@ -16,6 +16,7 @@ type GeoPoint struct {
 	Longitude         float64   `json:"longitude"`
 	Address           string    `json:"address"`
 	OwnerID           string    `json:"owner_id"`
+	OwnerName         string    `json:"owner_name"`
 	TahunBerdiri      *int      `json:"tahun_berdiri"`
 	StatusKepemilikan string    `json:"status_kepemilikan"`
 	Description       string    `json:"description"`

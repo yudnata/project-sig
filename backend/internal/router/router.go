@@ -10,5 +10,5 @@ func Setup(app *fiber.App, authH *auth.Handler, pointsH *points.Handler, authMid
 	api := app.Group("/api")
 
 	auth.RegisterRoutes(api, authH, authMiddleware)
-	points.RegisterRoutes(api, pointsH)
+	points.RegisterRoutes(api, pointsH, authMiddleware)
 }

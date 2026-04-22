@@ -37,3 +37,29 @@ func (s *Service) CreatePoint(ctx context.Context, ownerID string, input CreateP
 func (s *Service) GetAllPoints(ctx context.Context) ([]GeoPoint, error) {
 	return s.repo.GetAll(ctx)
 }
+
+func (s *Service) UpdatePoint(ctx context.Context, id int, req CreatePointReq) (*GeoPoint, error) {
+	typeID := req.TypeID
+	tahunBerdiri := req.TahunBerdiri
+
+	point := &GeoPoint{
+		TypeID:            &typeID,
+		Name:              req.Name,
+		Latitude:          req.Latitude,
+		Longitude:         req.Longitude,
+		Address:           req.Address,
+		TahunBerdiri:      &tahunBerdiri,
+		StatusKepemilikan: req.StatusKepemilikan,
+		Description:       req.Description,
+	}
+
+	if err := s.repo.Update(ctx, id, point); err != nil {
+		return nil, err
+	}
+
+	return point, nil
+}
+
+func (s *Service) DeletePoint(ctx context.Context, id int) error {
+	return s.repo.Delete(ctx, id)
+}

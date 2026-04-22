@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import NotificationToast from '@/components/NotificationToast.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
@@ -29,8 +30,8 @@ const isLoginRoute = computed(() => route.path === '/login')
           <h1 class="text-lg font-bold">SIG Tata Ruang</h1>
         </div>
         <nav class="flex overflow-auto text-sm space-x-2 pb-1">
-          <RouterLink to="/" class="px-3 py-1.5 rounded text-white/80" active-class="bg-white/20 !text-white font-bold">Public</RouterLink>
-          <RouterLink v-if="authStore.user" to="/dashboard" class="px-3 py-1.5 rounded shrink-0 text-white/80" active-class="bg-white/20 !text-white font-bold">Dashboard</RouterLink>
+          <RouterLink to="/" class="px-3 py-1.5 rounded text-white/80" active-class="bg-white/20 !text-white font-bold">Peta Publik</RouterLink>
+          <RouterLink v-if="authStore.user" to="/dashboard" class="px-3 py-1.5 rounded shrink-0 text-white/80" active-class="bg-white/20 !text-white font-bold">Editor Peta</RouterLink>
           <RouterLink v-if="authStore.user" to="/tabular" class="px-3 py-1.5 rounded shrink-0 text-white/80" active-class="bg-white/20 !text-white font-bold">Tabel Master</RouterLink>
         </nav>
       </header>
@@ -46,4 +47,5 @@ const isLoginRoute = computed(() => route.path === '/login')
   </div>
 
   <NotificationToast />
+  <ConfirmModal />
 </template>

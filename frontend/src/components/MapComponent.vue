@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapPointsStore } from '@/stores/mapPoints'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 
 const emit = defineEmits<{
@@ -10,6 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useMapPointsStore()
+const authStore = useAuthStore()
 const { filteredPoints, objectTypes, isEditMode, isSidebarExpanded } = storeToRefs(store)
 
 const mapContainer = ref<HTMLElement | null>(null)
@@ -18,7 +20,7 @@ let markerLayer: L.LayerGroup | null = null
 
 const reverseGeocode = async (lat: number, lng: number) => {
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=id`)
     const data = await res.json()
     return data.display_name || 'Alamat tidak ditemukan'
   } catch (error) {
@@ -27,8 +29,10 @@ const reverseGeocode = async (lat: number, lng: number) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!mapContainer.value) return
+
+  await store.fetchPoints()
 
   map = L.map(mapContainer.value, { zoomControl: false }).setView([-8.65, 115.2166], 12)
   L.control.zoom({ position: 'bottomleft' }).addTo(map)
@@ -185,13 +189,44 @@ const renderMarkers = () => {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
               <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
             </svg>
-            Kontributor: ${point.owner_id ? `Admin #${point.owner_id.substring(0, 5)}` : 'Sistem'}
+            Kontributor: ${point.owner_name || 'Sistem'}
           </div>
+          ${authStore.isAuthenticated() ? `
+          <div class="mt-2 flex gap-2 pt-2 border-t border-gray-100">
+            <button class="edit-point-btn flex-1 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-1.5 rounded text-[10px] uppercase tracking-wide transition-colors" data-id="${point.id}">Edit</button>
+            <button class="delete-point-btn flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-1.5 rounded text-[10px] uppercase tracking-wide transition-colors" data-id="${point.id}">Hapus</button>
+          </div>
+          ` : ''}
         </div>
       </div>
     `, {
       maxWidth: 300,
       className: 'premium-popup'
+    })
+
+    marker.on('popupopen', () => {
+      const editBtn = document.querySelector('.edit-point-btn')
+      const deleteBtn = document.querySelector('.delete-point-btn')
+
+      if (editBtn) {
+        editBtn.addEventListener('click', () => {
+          store.openModal(point)
+        })
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+          store.requestConfirm(
+            'Hapus Bangunan?',
+            `Apakah Anda yakin ingin menghapus data bangunan "${point.name}" secara permanen?`,
+            async () => {
+              if (point.id) {
+                await store.deletePoint(point.id)
+              }
+            }
+          )
+        })
+      }
     })
   })
 }

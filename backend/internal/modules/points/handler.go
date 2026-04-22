@@ -3,6 +3,7 @@ package points
 import (
 	"backend/pkg/response"
 	"github.com/gofiber/fiber/v3"
+	"strconv"
 )
 
 type Handler struct {
@@ -48,4 +49,38 @@ func (h *Handler) GetAll(c fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.Success("Berhasil mendapatkan data peta", points))
+}
+
+func (h *Handler) Update(c fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("ID tidak valid"))
+	}
+
+	var input CreatePointReq
+	if err := c.Bind().Body(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("Format input tidak valid: " + err.Error()))
+	}
+
+	point, err := h.service.UpdatePoint(c.Context(), id, input)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error("Gagal memperbarui data: " + err.Error()))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("Titik bangunan berhasil diperbarui", point))
+}
+
+func (h *Handler) Delete(c fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.Error("ID tidak valid"))
+	}
+
+	if err := h.service.DeletePoint(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.Error("Gagal menghapus data: " + err.Error()))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.Success("Titik bangunan berhasil dihapus", nil))
 }

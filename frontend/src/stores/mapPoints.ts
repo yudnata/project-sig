@@ -18,6 +18,7 @@ export interface GeoPoint {
   longitude: number
   address: string
   owner_id: string
+  owner_name?: string
   tahun_berdiri?: number
   status_kepemilikan?: string
   description?: string
@@ -58,6 +59,30 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
   const activePoint = ref<GeoPoint | null>(null)
   const isSidebarExpanded = ref(false)
 
+  // Global confirmation modal state
+  const confirmState = ref({
+    isOpen: false,
+    title: 'Konfirmasi',
+    message: 'Apakah Anda yakin?',
+    onConfirm: () => {},
+  })
+
+  const requestConfirm = (title: string, message: string, onConfirm: () => void) => {
+    confirmState.value = {
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm()
+        confirmState.value.isOpen = false
+      },
+    }
+  }
+
+  const cancelConfirm = () => {
+    confirmState.value.isOpen = false
+  }
+
   const searchQuery = ref('')
   const filterTypeId = ref<number | null>(null)
   const filterMyPoints = ref<boolean>(true)
@@ -89,8 +114,12 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
   const savePoint = async (pointData: Partial<GeoPoint>) => {
     try {
       const token = localStorage.getItem('auth_token') || ''
-      const res = await fetch(`${API_URL}/points`, {
-        method: 'POST',
+      const isEdit = !!pointData.id
+      const method = isEdit ? 'PUT' : 'POST'
+      const url = isEdit ? `${API_URL}/points/${pointData.id}` : `${API_URL}/points`
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -99,14 +128,52 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
       })
       const json = await res.json()
       if (json.success) {
-        points.value.push(json.data)
-        notificationStore.success('Titik berhasil disimpan!')
+        const savedPoint = json.data
+
+        const authStore = useAuthStore()
+        if (!savedPoint.owner_name && authStore.user) {
+          savedPoint.owner_name = authStore.user.name
+        }
+
+        if (isEdit) {
+          const index = points.value.findIndex((p) => p.id === pointData.id)
+          if (index !== -1) points.value[index] = savedPoint
+        } else {
+          points.value.push(savedPoint)
+        }
+        notificationStore.success(
+          isEdit ? 'Titik berhasil diperbarui!' : 'Titik berhasil disimpan!',
+        )
         return true
       }
       notificationStore.error(json.message || 'Gagal menyimpan titik.')
       return false
     } catch (err) {
       console.error('Failed to save point:', err)
+      notificationStore.error('Terjadi kesalahan koneksi.')
+      return false
+    }
+  }
+
+  const deletePoint = async (id: number) => {
+    try {
+      const token = localStorage.getItem('auth_token') || ''
+      const res = await fetch(`${API_URL}/points/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const json = await res.json()
+      if (json.success) {
+        points.value = points.value.filter((p) => p.id !== id)
+        notificationStore.success('Titik berhasil dihapus!')
+        return true
+      }
+      notificationStore.error(json.message || 'Gagal menghapus titik.')
+      return false
+    } catch (err) {
+      console.error('Failed to delete point:', err)
       notificationStore.error('Terjadi kesalahan koneksi.')
       return false
     }
@@ -161,5 +228,9 @@ export const useMapPointsStore = defineStore('mapPoints', () => {
     toggleEditMode,
     openModal,
     closeModal,
+    deletePoint,
+    confirmState,
+    requestConfirm,
+    cancelConfirm,
   }
 })

@@ -4,6 +4,7 @@ import MapComponent from '@/components/MapComponent.vue'
 
 const store = useMapPointsStore()
 store.isEditMode = false
+store.filterMyPoints = false
 </script>
 
 <template>
